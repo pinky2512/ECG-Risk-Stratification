@@ -1,0 +1,11 @@
+torch>=2.0
+wfdb
+neurokit2
+scikit-learn
+numpy
+pandas
+matplotlib
+seaborn
+wandb
+jupyter
+tqdm

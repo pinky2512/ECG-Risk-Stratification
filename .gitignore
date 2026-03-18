@@ -233,3 +233,6 @@ data/test.csv
 
 # Debug file
 debug.py
+
+# Checkpoints
+checkpoints/
