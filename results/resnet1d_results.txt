@@ -1,0 +1,12 @@
+Best Val F1 : 0.6677
+Test Macro F1: 0.6577
+
+              precision    recall  f1-score   support
+
+         Low     0.7896    0.7794    0.7845      1555
+      Medium     0.5653    0.4790    0.5186       858
+        High     0.6182    0.7312    0.6700       826
+
+    accuracy                         0.6876      3239
+   macro avg     0.6577    0.6632    0.6577      3239
+weighted avg     0.6865    0.6876    0.6849      3239
