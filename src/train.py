@@ -1,6 +1,6 @@
 """
 Training loop for ECG Risk Stratification
-Supports: 1D ResNet-34 (extendable to CNN-Transformer)
+Supports: CNN-Transformer hybrid
 Logs: train/val loss, macro F1, per-class F1 each epoch
 """
 
@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 sys.path.insert(0, os.path.dirname(__file__))
 from dataset import get_dataloaders, get_class_weights
-from models.resnet1d import ResNet1D
+from models.cnn_transformer import CNNTransformer
 
 # ── Config ─────────────────────────────────────────────────
 CONFIG = {
@@ -28,7 +28,7 @@ CONFIG = {
     "epochs"      : 30,
     "lr"          : 3e-4,
     "weight_decay": 1e-4,
-    "dropout"     : 0.3,
+    "dropout"     : 0.1,
     "patience"    : 7,
     "num_classes" : 3,
     "seed"        : 42,
@@ -59,7 +59,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device, epoch):
         total_loss += loss.item() * x.size(0)
         all_preds.extend(out.argmax(1).cpu().numpy())
         all_labels.extend(y.cpu().numpy())
-
         pbar.set_postfix(loss=f"{loss.item():.4f}")
 
     avg_loss = total_loss / len(loader.dataset)
@@ -101,10 +100,9 @@ def main():
     )
 
     # ── Model ──────────────────────────────────────────────
-    model = ResNet1D(num_classes=CONFIG["num_classes"],
-                     dropout=CONFIG["dropout"]).to(device)
+    model = CNNTransformer(num_classes=CONFIG["num_classes"]).to(device)
     total_params = sum(p.numel() for p in model.parameters())
-    print(f"Model: ResNet1D | Parameters: {total_params:,}\n")
+    print(f"Model: CNN-Transformer | Parameters: {total_params:,}\n")
 
     # ── Loss with class weights ────────────────────────────
     class_weights = get_class_weights(
@@ -149,7 +147,7 @@ def main():
         if val_f1 > best_val_f1:
             best_val_f1 = val_f1
             torch.save(model.state_dict(),
-                       os.path.join(CONFIG["save_dir"], "resnet1d_best.pt"))
+                       os.path.join(CONFIG["save_dir"], "cnn_transformer_best.pt"))
             print(f"  ✓ Saved best model (val F1: {best_val_f1:.4f})")
             patience_ctr = 0
         else:
@@ -161,7 +159,7 @@ def main():
     # ── Final evaluation on test set ───────────────────────
     print("\n── Test Set Evaluation ──────────────────────────")
     model.load_state_dict(
-        torch.load(os.path.join(CONFIG["save_dir"], "resnet1d_best.pt"),
+        torch.load(os.path.join(CONFIG["save_dir"], "cnn_transformer_best.pt"),
                    map_location=device)
     )
     _, test_f1, test_preds, test_labels = evaluate(
@@ -174,12 +172,12 @@ def main():
                                  target_names=CLASSES, digits=4))
 
     os.makedirs("results", exist_ok=True)
-    with open("results/resnet1d_results.txt", "w") as f:
-        f.write(f"Best Val F1 : {best_val_f1:.4f}\n")
+    with open("results/cnn_transformer_results.txt", "w") as f:
+        f.write(f"Best Val F1  : {best_val_f1:.4f}\n")
         f.write(f"Test Macro F1: {test_f1:.4f}\n\n")
         f.write(classification_report(test_labels, test_preds,
                                        target_names=CLASSES, digits=4))
-    print("\nResults saved to results/resnet1d_results.txt")
+    print("\nResults saved to results/cnn_transformer_results.txt")
 
 
 if __name__ == "__main__":
