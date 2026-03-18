@@ -55,12 +55,25 @@ wget -r -N -c -np https://physionet.org/files/ptb-xl/1.0.3/ -P data/ptbxl/
 
 ---
 
-## 🔍 Key Design Decisions
 
-- **Patient-level train/val/test split** — prevents data leakage from same-patient records appearing across splits
-- **Worst-case label assignment** — multi-label records get the highest risk class (clinically conservative)
-- **High-risk recall prioritized** — threshold tuned to minimize false negatives for high-risk class
-- **Grad-CAM interpretability** — activations validated against known ECG anatomy (ST segments, QRS morphology)
+## 📊 Results
+
+| Model | Macro F1 | High-Risk Recall | Accuracy |
+|-------|----------|-----------------|---------|
+| Logistic Regression (baseline) | — | — | — |
+| 1D ResNet-34 | 0.6577 | 0.7312 | 68.76% |
+| CNN-Transformer | 0.6424 | 0.7591 | 66.81% |
+
+> **Clinical note:** CNN-Transformer is preferred for triage despite lower macro F1 — it catches more high-risk patients (recall 0.7591 vs 0.7312), minimizing dangerous false negatives.
+
+---
+## 🔍 Interpretability
+
+**Lead Importance** — V1, V2, V3 and Lead II are the most critical leads,
+consistent with clinical knowledge (anterior MI detection, rhythm assessment).
+
+![Lead Importance](results/figures/lead_importance.png)
+
 
 ---
 
